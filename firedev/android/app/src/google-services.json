@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "214741830219",
+    "project_id": "firedev-64a4e",
+    "storage_bucket": "firedev-64a4e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:214741830219:android:16fcf234d5952b4b0a1bce",
+        "android_client_info": {
+          "package_name": "com.example.firedev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "214741830219-9bvthiidqmig7kqo43cov77jln1uhkse.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4CzOw1WpiaYgYVEGJrjRYSFw0O4B1nsY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "214741830219-9bvthiidqmig7kqo43cov77jln1uhkse.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
