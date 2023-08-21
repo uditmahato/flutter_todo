@@ -13,15 +13,23 @@ class LoginPage extends StatelessWidget {
         email: _emailController.text,
         password: _passwordController.text,
       );
-      // Successfully logged in, navigate to the home page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      // Successfully logged in, navigate to the home page or TODO page
+      if (FirebaseAuth.instance.currentUser != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
     } catch (e) {
       // Handle login failure
       print('Login failed: $e');
-      // Show an error message or dialog
+      // Show a SnackBar with the error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login failed:Check your email or password'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -57,6 +65,12 @@ class LoginPage extends StatelessWidget {
                 _performLogin(context);
               },
               child: Text('Login'),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
             ),
             SizedBox(height: 20),
             // "Don't have an account?" text
