@@ -5,8 +5,9 @@ import 'package:firebase_database/firebase_database.dart';
 
 final firebaseApp = Firebase.app();
 final rtdb = FirebaseDatabase.instanceFor(
-    app: firebaseApp,
-    databaseURL: 'https://firedev-64a4e-default-rtdb.firebaseio.com/');
+  app: firebaseApp,
+  databaseURL: 'https://firedev-64a4e-default-rtdb.firebaseio.com/',
+);
 
 class TodoPage extends StatefulWidget {
   final Map<dynamic, dynamic>? editTask;
@@ -17,14 +18,29 @@ class TodoPage extends StatefulWidget {
   _TodoPageState createState() => _TodoPageState();
 }
 
-class _TodoPageState extends State<TodoPage> {
+class _TodoPageState extends State<TodoPage>
+    with SingleTickerProviderStateMixin {
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
   String _priority = 'High';
   DatabaseReference databaseReference = rtdb.ref();
+  AnimationController? _animationController;
+  Animation<double>? _animation;
+
   @override
   void initState() {
     super.initState();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    )..forward();
+
+    _animation = CurvedAnimation(
+      parent: _animationController!,
+      curve: Curves.easeInOut,
+    );
+
     if (widget.editTask != null) {
       _subjectController.text = widget.editTask!['subject'];
       _descriptionController.text = widget.editTask!['description'];
@@ -35,37 +51,112 @@ class _TodoPageState extends State<TodoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Todo Page')),
-      body: Padding(
+      appBar: AppBar(
+        title: Text('Todo Page'),
+        backgroundColor: Colors.blue.shade900,
+      ),
+      body: Container(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade900, Colors.purple],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: FadeTransition(
+          opacity: _animation!,
+          child: ListView(
+            children: [
+              _buildCard(
+                icon: Icons.subject,
+                child: TextField(
+                  controller: _subjectController,
+                  style: TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    labelText: 'Subject',
+                    labelStyle: TextStyle(color: Colors.black),
+                    hintText: 'Enter task subject here',
+                    hintStyle: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ),
+              SizedBox(height: 12),
+              _buildCard(
+                icon: Icons.priority_high,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    dropdownColor: const Color.fromARGB(255, 255, 255, 255),
+                    style: TextStyle(color: Colors.black),
+                    value: _priority,
+                    items: ['High', 'Medium', 'Low'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _priority = newValue!;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 12),
+              _buildCard(
+                icon: Icons.description,
+                child: TextField(
+                  controller: _descriptionController,
+                  style: TextStyle(color: Colors.black),
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    labelText: 'Description',
+                    labelStyle: TextStyle(color: Colors.black),
+                    hintText: 'Provide more details about the task',
+                    hintStyle: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
+                  ),
+                  onPressed: _addOrUpdateTask,
+                  child: Text(
+                    widget.editTask == null ? 'Add' : 'Update',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard({required IconData icon, required Widget child}) {
+    return Card(
+      elevation: 8.0,
+      shadowColor: Colors.black45,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
           children: [
-            TextField(
-              controller: _subjectController,
-              decoration: InputDecoration(labelText: 'Subject'),
-            ),
-            DropdownButton<String>(
-              value: _priority,
-              items: ['High', 'Medium', 'Low'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  _priority = newValue!;
-                });
-              },
-            ),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
-            ),
-            ElevatedButton(
-              onPressed: _addOrUpdateTask,
-              child: Text(widget.editTask == null ? 'Add' : 'Update'),
-            ),
+            Icon(icon, color: Colors.purpleAccent, size: 28.0),
+            SizedBox(width: 16),
+            Expanded(child: child),
           ],
         ),
       ),
@@ -82,7 +173,6 @@ class _TodoPageState extends State<TodoPage> {
       };
 
       if (widget.editTask == null) {
-        // Add new task
         await databaseReference
             .child('users')
             .child(user.uid)
@@ -90,9 +180,7 @@ class _TodoPageState extends State<TodoPage> {
             .push()
             .set(task);
       } else {
-        // Update existing task
-        // You'll need the key of the task to update. This is just a placeholder.
-        String taskKey = 'TASK_KEY'; // Replace with the actual key
+        String taskKey = widget.editTask!['id'];
         await databaseReference
             .child('users')
             .child(user.uid)
@@ -101,7 +189,13 @@ class _TodoPageState extends State<TodoPage> {
             .update(task);
       }
 
-      Navigator.pop(context); // Go back to the home page
+      Navigator.pop(context); // Go back to the previous page
     }
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
   }
 }
